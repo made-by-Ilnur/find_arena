@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Golos — Футбольные поля Ташкента</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo">Gol<span>⬤</span>s</div>
+    <div class="nav-links">
+      <a href="#">Стадионы</a>
+      <a href="#">Турниры</a>
+      <a href="#">О нас</a>
+      <a href="#">Контакты</a>
+    </div>
+    <button class="nav-cta">Войти</button>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <!-- Sweep flash -->
+    <div class="hero-sweep"></div>
+    <!-- Particles -->
+    <div class="hero-particles" id="hero-particles"></div>
+    <!-- Pitch line drawing animation -->
+    <svg class="pitch-lines" viewBox="0 0 500 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="50" y1="50" x2="450" y2="50" stroke="white" stroke-width="2" />
+      <line x1="50" y1="300" x2="450" y2="300" stroke="white" stroke-width="2" />
+      <circle cx="250" cy="300" r="60" stroke="white" stroke-width="2" fill="none" />
+      <rect x="140" y="50" width="220" height="80" stroke="white" stroke-width="2" />
+      <rect x="140" y="470" width="220" height="80" stroke="white" stroke-width="2" />
+      <rect x="190" y="50" width="120" height="36" stroke="white" stroke-width="2" />
+      <rect x="190" y="514" width="120" height="36" stroke="white" stroke-width="2" />
+      <circle cx="250" cy="50" r="5" fill="white" />
+      <circle cx="250" cy="550" r="5" fill="white" />
+      <circle cx="250" cy="300" r="5" fill="white" />
+    </svg>
+    <!-- Floating ball -->
+    <img class="hero-ball" src="./assets/img/rjqogb3936e61i57x60vxp78eu334yj4.webp" alt="">
+    <div class="hero-inner">
+      <div>
+        <div class="hero-badge">24 поля доступны прямо сейчас</div>
+        <h1>Найди своё<em>поле</em> в<br>Ташкенте</h1>
+        <p class="hero-sub">Бронируй футбольные поля в любом районе города. Мгновенное подтверждение, честные цены, без
+          лишних звонков.</p>
+          <div class="info-cards">
+    <div class="ic">
+      <div class="ic-icon g"><i class="ti ti-map-pin" aria-hidden="true"></i></div>
+      <div><div class="ic-v" id="cv1">24</div><div class="ic-l">полей в Ташкенте</div></div>
+    </div>
+    <div class="ic">
+      <div class="ic-icon a">⭐<i class="ti ti-star" aria-hidden="true"></i></div>
+      <div><div class="ic-v" id="cv2">10</div><div class="ic-l">средний рейтинг</div></div>
+    </div>
+    <div class="ic">
+      <div class="ic-icon b"><i class="ti ti-building-community" aria-hidden="true"></i></div>
+      <div><div class="ic-v" id="cv3">15</div><div class="ic-l">районов города</div></div>
+    </div>
+  </div>
+  
+      </div>
+    </div>
+  </section>
+
+  <!-- MAP + SEARCH -->
+  <section class="map-section" id="search-section">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Карта свободных полей</div>
+        <div class="section-sub">Зелёные метки — свободны сейчас</div>
+      </div>
+    </div>
+
+    <!-- Search bar -->
+    <div style="display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap">
+      <input class="map-search-input" id="main-search" type="text" placeholder="Поиск по названию, улице или району..."
+        style="flex:1;min-width:240px;padding:11px 16px;border-radius:10px;border:1.5px solid var(--border);font-size:14px;font-family:'Inter',sans-serif;outline:none;background:#fff;transition:border-color .2s"
+        oninput="filterCards()" onfocus="this.style.borderColor='var(--green-mid)'"
+        onblur="this.style.borderColor='var(--border)'">
+      <select id="time-filter"
+        style="padding:11px 16px;border-radius:10px;border:1.5px solid var(--border);font-size:14px;font-family:'Inter',sans-serif;background:#fff;color:var(--text);outline:none;cursor:pointer"
+        onchange="filterCards()">
+        <option value="">Любое время</option>
+        <option value="morning">Утро (6:00–12:00)</option>
+        <option value="day">День (12:00–18:00)</option>
+        <option value="evening">Вечер (18:00–23:00)</option>
+      </select>
+      <select id="price-filter"
+        style="padding:11px 16px;border-radius:10px;border:1.5px solid var(--border);font-size:14px;font-family:'Inter',sans-serif;background:#fff;color:var(--text);outline:none;cursor:pointer"
+        onchange="filterCards()">
+        <option value="">Любая цена</option>
+        <option value="cheap">До 150 000 сум/ч</option>
+        <option value="mid">150–250 000 сум/ч</option>
+        <option value="premium">Свыше 250 000 сум/ч</option>
+      </select>
+    </div>
+
+    <!-- District filters -->
+    <div class="district-filter" id="district-filter">
+      <button class="filter-chip active" data-district="all" onclick="setDistrict(this,'all')">Все районы</button>
+      <button class="filter-chip" data-district="Юнусабад" onclick="setDistrict(this,'Юнусабад')">Юнусабад</button>
+      <button class="filter-chip" data-district="Мирзо-Улугбек"
+        onclick="setDistrict(this,'Мирзо-Улугбек')">Мирзо-Улугбек</button>
+      <button class="filter-chip" data-district="Чиланзар" onclick="setDistrict(this,'Чиланзар')">Чиланзар</button>
+      <button class="filter-chip" data-district="Яшнабад" onclick="setDistrict(this,'Яшнабад')">Яшнабад</button>
+      <button class="filter-chip" data-district="Шайхантаур"
+        onclick="setDistrict(this,'Шайхантаур')">Шайхантаур</button>
+      <button class="filter-chip" data-district="Бектемир" onclick="setDistrict(this,'Бектемир')">Бектемир</button>
+    </div>
+
+    <!-- Real Leaflet Map -->
+    <div class="map-container">
+      <div id="leaflet-map">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d191903.80481774648!2d69.17979052041987!3d41.27628774970333!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x38ae8b0cc379e9c3%3A0xa5a9323b4aa5cb98!2z0KLQsNGI0LrQtdC90YIsINCj0LfQsdC10LrQuNGB0YLQsNC9!5e0!3m2!1sru!2s!4v1782626412339!5m2!1sru!2s"
+          width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </div>
+      <div class="map-legend">
+        <div class="legend-item">
+          <div class="dot dot-free"></div>Свободно
+        </div>
+        <div class="legend-item">
+          <div class="dot dot-busy"></div>Занято
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARDS -->
+  <section class="cards-section">
+    <div class="section-header" style="margin-bottom:1.5rem">
+      <div>
+        <div class="section-title" id="results-count">Все поля — 8 объектов</div>
+        <div class="section-sub">Кликни на карточку для подробной информации и бронирования</div>
+      </div>
+      <select
+        style="padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);font-size:13px;font-family:'Inter',sans-serif;background:#fff;color:var(--text);outline:none;cursor:pointer"
+        onchange="sortCards(this.value)">
+        <option value="default">По умолчанию</option>
+        <option value="price-asc">Цена: по возрастанию</option>
+        <option value="price-desc">Цена: по убыванию</option>
+        <option value="rating">По рейтингу</option>
+      </select>
+    </div>
+    <div class="no-results" id="no-results">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.35-4.35" />
+      </svg>
+      <p>Ничего не найдено. Попробуйте другой запрос.</p>
+    </div>
+    <div class="cards-grid" id="cards-grid"></div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features">
+    <div class="features-inner">
+      <div class="features-title">Почему выбирают Golos</div>
+      <div class="features-grid">
+        <div class="feat-card">
+          <div class="feat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50"
+              stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg></div>
+          <div class="feat-title">Мгновенное подтверждение</div>
+          <div class="feat-desc">Бронь подтверждается за секунды. Никаких звонков и ожидания.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50"
+              stroke-width="2">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+              <line x1="1" y1="10" x2="23" y2="10" />
+            </svg></div>
+          <div class="feat-title">Оплата онлайн</div>
+          <div class="feat-desc">Click, Payme, UzCard — выбери удобный способ оплаты.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50"
+              stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            </svg></div>
+          <div class="feat-title">Реальные фото</div>
+          <div class="feat-desc">Только настоящие снимки полей без фотошопа.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50"
+              stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg></div>
+          <div class="feat-title">Доступно 7/24</div>
+          <div class="feat-desc">Поля работают с раннего утра до позднего вечера.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">Gol<span>⬤</span>s</div>
+    <p>© 2025 Golos — Футбольные поля Ташкента. Все права защищены.</p>
+  </footer>
+
+  <!-- DETAIL PAGE -->
+  <div class="detail-page" id="detail-page">
+    <div class="detail-nav">
+      <button class="back-btn" onclick="closeDetail()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+        Назад к списку
+      </button>
+      <div style="flex:1"></div>
+      <button class="card-btn" id="detail-book-btn">Забронировать</button>
+    </div>
+    <div class="detail-inner" id="detail-content"></div>
+  </div>
+
+  <script>
+    const stadiums = [
+      {
+        id: 0, name: "Поле «Локомотив Парк»", district: "Шайхантаур", address: "ул. Беруний, 14", price: 180000, rating: 4.9, reviews: 124, size: "11×11", cover: "Искусственный газон", lighting: true, parking: true, locker: true, status: "free", time: "morning", color: "#1A5C30", description: "Профессиональное поле с подогревом и искусственным газоном FIFA Quality Pro. Идеально для серьёзных матчей и тренировок. Рядом — кафе и магазин спортивного инвентаря.", slots: ["08:00", "09:00", "10:00", "12:00", "14:00", "18:00", "19:00", "21:00"], takenSlots: [2, 5]
+      },
+      {
+        id: 1, name: "Арена «Юнусабад»", district: "Юнусабад", address: "пр. Амира Темура, 108Б", price: 220000, rating: 4.8, reviews: 89, size: "8×8", cover: "Натуральный газон", lighting: true, parking: true, locker: false, status: "free", time: "evening", color: "#1B4A6B", description: "Современная мини-арена с трибунами на 200 мест. Натуральный газон ухаживается ежедневно. Отличный выбор для корпоративных турниров и дружеских матчей.", slots: ["07:00", "09:00", "11:00", "15:00", "17:00", "19:00", "20:00", "22:00"], takenSlots: [0, 3, 6]
+      },
+      {
+        id: 2, name: "Комплекс «МиУ Спорт»", district: "Мирзо-Улугбек", address: "ул. Фурката, 22", price: 150000, rating: 4.7, reviews: 203, size: "11×11", cover: "Искусственный газон", lighting: true, parking: false, locker: true, status: "free", time: "morning", color: "#4A1A6B", description: "Один из крупнейших спортивных комплексов в Мирзо-Улугбекском районе. Два поля, раздевалки с душем, аренда мячей и манишек. Скидки на длительную аренду.", slots: ["06:00", "07:00", "09:00", "11:00", "13:00", "16:00", "18:00", "20:00"], takenSlots: [1, 4]
+      },
+      {
+        id: 3, name: "«Яшнабад Арена»", district: "Яшнабад", address: "ул. Каранги Чул, 5", price: 200000, rating: 4.6, reviews: 67, size: "8×8", cover: "Резиновое покрытие", lighting: false, parking: true, locker: true, status: "free", time: "day", color: "#6B3A1A", description: "Крытый спортзал с особым резиновым покрытием — идеален для зимних тренировок. Уютная атмосфера, есть зона отдыха с чаем и снэками. Вмещает команды до 16 человек.", slots: ["10:00", "11:00", "12:00", "14:00", "15:00", "17:00", "19:00", "21:00"], takenSlots: [0, 5, 6]
+      },
+      {
+        id: 4, name: "«Чиланзар Футбол»", district: "Чиланзар", address: "ул. Чиланзар, 19А", price: 130000, rating: 4.5, reviews: 156, size: "5×5", cover: "Искусственный газон", lighting: true, parking: false, locker: false, status: "free", time: "evening", color: "#1A4A5C", description: "Бюджетный вариант в одном из самых густонаселённых районов. Маленькое поле формата 5×5, идеальное для дворовых матчей. Запись за 2 часа вперёд.", slots: ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00"], takenSlots: [2, 3, 7]
+      },
+      {
+        id: 5, name: "«Центральный» им. Пахтакора", district: "Шайхантаур", address: "ул. Islom Karimov, 1", price: 350000, rating: 5.0, reviews: 312, size: "11×11", cover: "Натуральный газон", lighting: true, parking: true, locker: true, status: "busy", time: "evening", color: "#4A1A1A", description: "Главное поле Ташкента. Стандарт FIFA, профессиональное освещение 1400 люкс, электронное табло, раздевалки евроклассе. Подходит для официальных турниров.", slots: ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00"], takenSlots: [0, 1, 2, 3, 4, 5, 6, 7]
+      },
+      {
+        id: 6, name: "«Бектемир Спорт»", district: "Бектемир", address: "ул. Зафар, 44", price: 120000, rating: 4.4, reviews: 44, size: "8×8", cover: "Искусственный газон", lighting: false, parking: true, locker: false, status: "busy", time: "morning", color: "#3A5C1A", description: "Недавно открытое поле на восточной окраине города. Доступные цены, просторная парковка. Рекомендуется для утренних тренировок небольших команд.", slots: ["06:00", "07:00", "08:00", "09:00", "10:00", "14:00", "16:00", "18:00"], takenSlots: [0, 1, 2, 3]
+      },
+      {
+        id: 7, name: "«Учтепа Грин»", district: "Учтепа", address: "ул. Паркентская, 7", price: 160000, rating: 4.8, reviews: 98, size: "11×11", cover: "Искусственный газон", lighting: true, parking: true, locker: true, status: "free", time: "day", color: "#1A3A5C", description: "Новое поле с качественным искусственным газоном 4-го поколения. Просторные раздевалки, видеозапись матча по запросу. Постоянным клиентам — карта лояльности.", slots: ["07:00", "09:00", "11:00", "13:00", "15:00", "17:00", "19:00", "21:00"], takenSlots: [1, 3]
+      }
+    ];
+
+    let filteredIds = stadiums.map(s => s.id);
+    let activeDistrict = 'all';
+
+    function formatPrice(p) { return p.toLocaleString('ru-RU') + ' сум/ч' }
+
+    function renderCards(ids) {
+      const grid = document.getElementById('cards-grid');
+      const nr = document.getElementById('no-results');
+      const count = document.getElementById('results-count');
+      if (!ids || ids.length === 0) { grid.innerHTML = ''; nr.style.display = 'block'; count.textContent = 'Ничего не найдено'; return; }
+      nr.style.display = 'none';
+      count.textContent = `Найдено — ${ids.length} ${ids.length === 1 ? 'объект' : ids.length < 5 ? 'объекта' : 'объектов'}`;
+      grid.innerHTML = ids.map(id => {
+        const s = stadiums[id];
+        const stars = '★'.repeat(Math.round(s.rating)) + '☆'.repeat(5 - Math.round(s.rating));
+        return `
+    <div class="card" onclick="openDetailById(${s.id})">
+      <div class="card-img">
+        <div class="card-badge ${s.status === 'free' ? 'badge-free' : 'badge-busy'}">${s.status === 'free' ? 'Свободно' : 'Занято'}</div>
+        <div class="card-district">${s.district}</div>
+      </div>
+      <div class="card-body">
+        <div class="card-name">${s.name}</div>
+        <div class="card-address">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${s.address}
+        </div>
+        <div class="card-meta">
+          <div class="meta-item"><svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>${s.size}</div>
+          <div class="meta-item"><svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${s.cover}</div>
+          <div class="meta-item" style="color:var(--accent)">★ ${s.rating} (${s.reviews})</div>
+        </div>
+        <div class="card-footer">
+          <div class="card-price">${formatPrice(s.price)} <span>/ час</span></div>
+          <button class="card-btn">Подробнее →</button>
+        </div>
+      </div>
+    </div>`;
+      }).join('');
+    }
+
+    function filterCards() {
+      const q = document.getElementById('main-search').value.toLowerCase();
+      const time = document.getElementById('time-filter').value;
+      const price = document.getElementById('price-filter').value;
+      filteredIds = stadiums.filter(s => {
+        const matchQ = !q || s.name.toLowerCase().includes(q) || s.district.toLowerCase().includes(q) || s.address.toLowerCase().includes(q);
+        const matchDistrict = activeDistrict === 'all' || s.district === activeDistrict;
+        const matchTime = !time || (time === 'morning' && s.time === 'morning') || (time === 'day' && s.time === 'day') || (time === 'evening' && s.time === 'evening');
+        let matchPrice = true;
+        if (price === 'cheap') matchPrice = s.price < 150000;
+        else if (price === 'mid') matchPrice = s.price >= 150000 && s.price <= 250000;
+        else if (price === 'premium') matchPrice = s.price > 250000;
+        return matchQ && matchDistrict && matchTime && matchPrice;
+      }).map(s => s.id);
+      renderCards(filteredIds);
+    }
+
+    function setDistrict(el, district) {
+      activeDistrict = district;
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      filterCards();
+    }
+
+    function sortCards(val) {
+      let sorted = [...filteredIds];
+      if (val === 'price-asc') sorted.sort((a, b) => stadiums[a].price - stadiums[b].price);
+      else if (val === 'price-desc') sorted.sort((a, b) => stadiums[b].price - stadiums[a].price);
+      else if (val === 'rating') sorted.sort((a, b) => stadiums[b].rating - stadiums[a].rating);
+      renderCards(sorted);
+    }
+
+    function openDetailById(id) {
+      const s = stadiums[id];
+      const detail = document.getElementById('detail-page');
+      const content = document.getElementById('detail-content');
+      const slotsHTML = s.slots.map((slot, i) => {
+        const taken = s.takenSlots.includes(i);
+        return `<div class="slot ${taken ? 'taken' : 'free'}">${slot}</div>`;
+      }).join('');
+      const facItems = [
+        { label: 'Освещение', ok: s.lighting },
+        { label: 'Парковка', ok: s.parking },
+        { label: 'Раздевалки', ok: s.locker },
+        { label: 'Аренда мяча', ok: true },
+        { label: 'Питьевая вода', ok: true },
+        { label: 'Wi-Fi', ok: s.rating >= 4.7 },
+      ];
+      content.innerHTML = `
+    <div class="detail-hero">
+      <div class="detail-hero-img">
+      </div>
+    </div>
+    <div class="detail-grid">
+      <div>
+        <div class="tags">
+          <div class="tag">${s.size}</div>
+          <div class="tag">${s.cover}</div>
+          <div class="tag">${s.district}</div>
+          <div class="tag ${s.status === 'free' ? '' : 'badge-busy'}" style="background:${s.status === 'free' ? 'var(--green-light)' : 'rgba(242,163,15,0.15)'};color:${s.status === 'free' ? 'var(--green)' : 'var(--accent)'}">${s.status === 'free' ? 'Свободно сейчас' : 'Занято сейчас'}</div>
+        </div>
+        <div class="detail-title">${s.name}</div>
+        <div class="detail-address">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${s.address}, Ташкент
+        </div>
+        <div class="detail-desc">${s.description}</div>
+        <div class="time-slots">
+          <h3>Доступное время сегодня</h3>
+          <div class="slots-grid">${slotsHTML}</div>
+        </div>
+      </div>
+      <div>
+        <div class="booking-card">
+          <div class="booking-price">${formatPrice(s.price)} <span>/ час</span></div>
+          <div class="booking-rating"><span class="stars">★★★★★</span> ${s.rating} · ${s.reviews} отзывов</div>
+          <div class="booking-form">
+            <div>
+              <div class="form-label">Дата</div>
+              <input class="form-input" type="date">
+            </div>
+            <div>
+              <div class="form-label">Время</div>
+              <select class="form-input">
+                ${s.slots.filter((_, i) => !s.takenSlots.includes(i)).map(t => `<option>${t}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <div class="form-label">Количество часов</div>
+              <select class="form-input">
+                <option>1 час</option>
+                <option>1.5 часа</option>
+                <option>2 часа</option>
+                <option>3 часа</option>
+              </select>
+            </div>
+            <div>
+              <div class="form-label">Ваш номер телефона</div>
+              <input class="form-input" type="tel" placeholder="+998 90 000 00 00">
+            </div>
+            <button class="book-now" onclick="alert('Бронирование оформлено! Ожидайте подтверждения на WhatsApp.')">Забронировать сейчас</button>
+            <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:4px">Бесплатная отмена за 2 часа до начала</div>
+          </div>
+          <div class="facilities">
+            <h4>Удобства</h4>
+            <div class="fac-list">
+              ${facItems.map(f => `
+              <div class="fac-item">
+                <div class="fac-check">
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                    ${f.ok ? '<polyline points="2,6 5,9 10,3" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round"/>' : '<line x1="3" y1="3" x2="9" y2="9" stroke="var(--muted)" stroke-width="1.5"/><line x1="9" y1="3" x2="3" y2="9" stroke="var(--muted)" stroke-width="1.5"/>'}
+                  </svg>
+                </div>
+                <span style="color:${f.ok ? 'var(--text)' : 'var(--muted)'}">${f.label}</span>
+              </div>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+      detail.style.display = 'block';
+      detail.scrollTop = 0;
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeDetail() {
+      document.getElementById('detail-page').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    renderCards(stadiums.map(s => s.id));
+  </script>
+  <script>
+    /* --- Particles --- */
+    (function () {
+      var container = document.getElementById('hero-particles');
+      if (!container) return;
+      for (var i = 0; i < 18; i++) {
+        var p = document.createElement('div');
+        p.className = 'particle';
+        var left = Math.random() * 100;
+        var duration = 6 + Math.random() * 8;
+        var delay = Math.random() * 6;
+        var drift = (Math.random() - 0.5) * 80 + 'px';
+        p.style.cssText = 'left:' + left + '%;bottom:0;width:' + (2 + Math.random() * 3) + 'px;height:' + (2 + Math.random() * 3) + 'px;--drift:' + drift + ';animation-duration:' + duration + 's;animation-delay:' + delay + 's;opacity:' + (0.3 + Math.random() * 0.4);
+        container.appendChild(p);
+      }
+    })();
+
+    /* --- Animated counters --- */
+    function animateCounter(el) {
+      var target = parseFloat(el.dataset.target);
+      var suffix = el.dataset.suffix || '';
+      var decimal = parseInt(el.dataset.decimal || 0);
+      var duration = 1600;
+      var start = performance.now();
+      function step(now) {
+        var progress = Math.min((now - start) / duration, 1);
+        var ease = 1 - Math.pow(1 - progress, 3);
+        var val = target * ease;
+        el.textContent = decimal > 0 ? val.toFixed(decimal) + suffix : Math.round(val) + suffix;
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    setTimeout(function () {
+      document.querySelectorAll('.stat-num[data-target]').forEach(function (el) { animateCounter(el); });
+    }, 750);
+
+    /* --- Leaflet map --- */
+    var stadiumCoords = [
+      { id: 0, lat: 41.2995, lng: 69.2401 },
+      { id: 1, lat: 41.3264, lng: 69.2907 },
+      { id: 2, lat: 41.3111, lng: 69.3214 },
+      { id: 3, lat: 41.2872, lng: 69.3501 },
+      { id: 4, lat: 41.2791, lng: 69.2156 },
+      { id: 5, lat: 41.2965, lng: 69.2782 },
+      { id: 6, lat: 41.2693, lng: 69.3722 },
+      { id: 7, lat: 41.3018, lng: 69.2038 }
+    ];
+
+    function footballBallSVG(color, shadow) {
+      /* Classic black-and-white football with colored ring border */
+      return `<svg width="44" height="52" viewBox="0 0 44 52" xmlns="http://www.w3.org/2000/svg">
+    <!-- Pin tail -->
+    <polygon points="22,44 18,52 26,52" fill="${shadow}"/>
+    <!-- Outer glow ring -->
+    <circle cx="22" cy="22" r="21" fill="${shadow}" opacity="0.25"/>
+    <!-- White ball -->
+    <circle cx="22" cy="22" r="20" fill="white" stroke="${color}" stroke-width="3"/>
+    <!-- Pentagon patches - classic football pattern -->
+    <!-- Center pentagon -->
+    <polygon points="22,10 28,15 26,22 18,22 16,15" fill="#1a1a1a"/>
+    <!-- Top-right -->
+    <polygon points="32,9 38,15 35,22 28,20 28,13" fill="#1a1a1a"/>
+    <!-- Bottom-right -->
+    <polygon points="36,26 38,34 30,36 26,30 30,24" fill="#1a1a1a"/>
+    <!-- Bottom-left -->
+    <polygon points="8,26 6,34 14,36 18,30 14,24" fill="#1a1a1a"/>
+    <!-- Top-left -->
+    <polygon points="12,9 6,15 9,22 16,20 16,13" fill="#1a1a1a"/>
+    <!-- Shine -->
+    <ellipse cx="17" cy="14" rx="4" ry="2.5" fill="rgba(255,255,255,0.55)" transform="rotate(-20,17,14)"/>
+  </svg>`;
+    }
+
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d191903.80481774648!2d69.17979052041987!3d41.27628774970333!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x38ae8b0cc379e9c3%3A0xa5a9323b4aa5cb98!2z0KLQsNGI0LrQtdC90YIsINCj0LfQsdC10LrQuNGB0YLQsNC9!5e0!3m2!1sru!2s!4v1782626412339!5m2!1sru!2s" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+
+    window.addEventListener('load', function () { setTimeout(initMap, 100); });
+  </script>
+</body>
+
+</html>
